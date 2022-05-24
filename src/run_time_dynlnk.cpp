@@ -45,7 +45,6 @@ int main()
     BOOL retFree = FALSE;
     #elif __linux__
     void *libHandle;
-    char *error;
     #endif    
     INC pInc = NULL;
     int count = 0;
@@ -59,7 +58,7 @@ int main()
         #ifdef _WIN32
         libHandle = LoadLibrary(L"libinc.dll");
         #elif __linux__
-        libHandle = dlopen("./libinc.so", RTLD_LAZY);
+        libHandle = dlopen("./lib/libinc.so", RTLD_LAZY);
         #endif
         if (!libHandle)
         {

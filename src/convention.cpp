@@ -173,7 +173,7 @@ int FASTCALL fastSum(int count, const int * list)
     int sum = 0;
     int i = 0;
 
-    for (int i = 0; i < count; i++)
+    for (i = 0; i < count; i++)
         sum += list[i];
 
     return sum;
@@ -184,7 +184,7 @@ int STDCALL listSum(int count, const int * list)
     int sum = 0;
     int i = 0;
 
-    for (int i = 0; i < count; i++)
+    for (i = 0; i < count; i++)
         sum += list[i];
 
     return sum;
@@ -220,7 +220,6 @@ double DoubleSum(int count, ...)
 {
     va_list ap;
     double sum = 0.0;
-    double next = 0.0;
 
     va_start(ap, count);
     for (int i = 0; i < count; i++)

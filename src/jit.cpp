@@ -30,7 +30,7 @@
 
 #include "setup.h"
 
-#if !(defined INTEL_X86 || AMD64)
+#if !(defined(INTEL_X86) || defined(AMD64))
 #error This benchmark contains x86/x64-specific assembly code that may be \
 incompatible with the current hardware architecture.
 #endif
@@ -78,47 +78,23 @@ BYTE JIT_code[] = {
 
 int main()
 {
-
-#ifdef _WIN32                
-    SYSTEM_INFO info;
-    DWORD dwPageSize;
-    FARPROC pJIT;
-    BOOL retVF;
-
-    // Get page size of current system
-    GetSystemInfo(&info);
-    dwPageSize = info.dwPageSize;
-
-    // Allocate a page of memory (RWX)
-    pJIT = (FARPROC)VirtualAlloc(
-        NULL, 
-        dwPageSize, 
-        MEM_COMMIT | MEM_RESERVE, 
-        PAGE_EXECUTE_READWRITE
-    );
-
-#elif __linux__    
     uint8_t *pJIT;
     int page_size;
-    int fd;
 
     page_size = getpagesize();
 
     // Allocate a page of memory (RWX)    
-    fd = open("/dev/zero", O_RDONLY);
     pJIT = (uint8_t *)mmap(
         NULL, 
         page_size, 
         PROT_READ | PROT_WRITE | PROT_EXEC, 
-        MAP_PRIVATE, 
-        fd, 
+        MAP_ANON | MAP_PRIVATE, 
+        -1, 
         0
     );
-#endif
-
-    if (!pJIT)
+    if (pJIT == MAP_FAILED)
     {
-        printf("Memory allocation failed for pJIT");
+        printf("Memory allocation failed for pJIT: %s\n", strerror(errno));
         exit(1);
     }
 
@@ -134,16 +110,7 @@ int main()
     ((CALLBACKPTR)pJIT)();
 
     // Free the page allocated
-#ifdef _WIN32
-    retVF = VirtualFree(pJIT, 0, MEM_RELEASE);
-    if (!retVF)
-    {
-        printf("VirtualFree() failed freeing pJIT");
-        exit(1);
-    }
-#elif __linux__
     munmap(pJIT, page_size);
-#endif
 
     printf("jit test passed.\n");
     return 0;

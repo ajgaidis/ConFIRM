@@ -79,8 +79,7 @@ void *ChildThread(void * retaddr_ptr)
 
 int main(int argc, char* argv[])
 {
-    unsigned int idChild;
-    pthread_t thread1;
+    pthread_t thread1 = 0;
     void * esp_addr;
 
     printf("Enter number of trials: ");

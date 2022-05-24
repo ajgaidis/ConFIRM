@@ -33,7 +33,7 @@ BOOL APIENTRY DllMain(
 
 #elif __linux__
 #include <limits.h>
-#include "helper.h"
+#include "setup.h"
 #endif
 
 void increment(int &i)

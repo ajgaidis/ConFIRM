@@ -30,90 +30,78 @@ Symposium, August 2019. */
 
 #include "setup.h"
 
-void callee1();
-void callee2();
+void callee1(bool *flag1);
+void callee2(bool *flag2);
 // min estimated max size of callee1 and callee 2
 #define ESTIMATED_FUNC_SIZE 100
 static bool flag_1 = FALSE;
 static bool flag_2 = FALSE;
 
-typedef void(*FUNCPTR)();
+typedef void(*FUNCPTR)(bool *);
 
 int main()
 {
-    SYSTEM_INFO info;
-    DWORD dwPageSize;
-    FARPROC caller;
-    BOOL retVP;
-    BOOL retVF;
-    DWORD dummy;
+    DWORD page_size;
     unsigned int size1;
     unsigned int size2;
+    uint8_t *caller;
+    int retP;
+    int retF;
 
-    // Get page size of current system.
-    GetSystemInfo(&info);
-    dwPageSize = info.dwPageSize;
+    page_size = getpagesize();
 
-    // Allocate a page of memory (RW).
-    caller = (FARPROC)VirtualAlloc(
+    // Allocate a page of memory (RW)
+    caller = (uint8_t *)mmap(
         NULL,
-        dwPageSize,
-        MEM_COMMIT | MEM_RESERVE,
-        PAGE_READWRITE
+	page_size,
+        PROT_READ | PROT_WRITE,
+        MAP_ANON | MAP_PRIVATE,
+        -1,
+        0
     );
-    if (!caller)
+    if (caller == MAP_FAILED)
     {
-        printf("Memory allocation failed for caller");
+        printf("Memory allocation failed for caller: %s\n", strerror(errno));
         exit(1);
     }
 
-    size1 = ((((unsigned int)callee1) + (ESTIMATED_FUNC_SIZE - 1)) / dwPageSize + 1) * dwPageSize - ((unsigned int)callee1);
+    size1 = ((((unsigned long)callee1) + (ESTIMATED_FUNC_SIZE - 1)) / page_size + 1) * page_size - ((unsigned long)callee1);
 
     // Copy code to caller
     memcpy(caller, (void *)&callee1, size1);
 
     // Change memory protection to executable only.
-    retVP = VirtualProtect(
-        caller,
-        dwPageSize,
-        PAGE_EXECUTE,
-        &dummy
-    );
-    if (!retVP)
+    retP = mprotect(caller, page_size, PROT_EXEC);
+    if (retP == -1)
     {
-        printf("VirtualProtect failed");
+        printf("Virtual/Memory Protect failed: %s\n", strerror(errno));
         exit(1);
     }
 
     // Invoke caller, in which callee1 is called.
-    ((FUNCPTR)caller)();
+    ((FUNCPTR)caller)(&flag_1);
 
     // Change memory protection to RWX.
-    retVP = VirtualProtect(
-        caller,
-        dwPageSize,
-        PAGE_EXECUTE_READWRITE,
-        &dummy
-    );
-    if (!retVP)
+    retP = mprotect(caller, page_size, PROT_READ | PROT_WRITE | PROT_EXEC);
+    if (retP == -1)
     {
-        printf("VirtualProtect failed");
+        printf("Virtual/Memory Protect failed: %s\n", strerror(errno));
         exit(1);
     }
 
-    size2 = ((((unsigned int)callee2) + (ESTIMATED_FUNC_SIZE - 1)) / dwPageSize + 1) * dwPageSize - ((unsigned int)callee2);
+    size2 = ((((unsigned long)callee2) + (ESTIMATED_FUNC_SIZE - 1)) / page_size + 1) * page_size - ((unsigned long)callee2);
 
     // Copy code to caller.
     memcpy(caller, (void *)&callee2, size2);
 
     // Invoke caller. This time caller2 is called.
-    ((FUNCPTR)caller)();
+    ((FUNCPTR)caller)(&flag_2);
 
     // Free the page allocated.
-    retVF = VirtualFree(caller, 0, MEM_RELEASE);
-    if (!retVF)
+    retF = munmap(caller, page_size);
+    if (retF == -1)
     {
-        printf("VirtualFree() failed freeing caller");
+        printf("VirtualFree/munmap failed freeing caller: %s\n", strerror(errno));
         exit(1);
     }
 
@@ -129,12 +117,12 @@ int main()
     return 0;
 }
 
-void callee1()
+void callee1(bool *flag1)
 {
-    flag_1 = TRUE;
+    *flag1 = TRUE;
 }
 
-void callee2()
+void callee2(bool *flag2)
 {
-    flag_2 = TRUE;
+    *flag2 = TRUE;
 }

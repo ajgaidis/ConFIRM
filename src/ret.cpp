@@ -58,13 +58,13 @@ int main()
     return 0;
 }
 
-#if (defined MSVC_ARCH || GNU_ARCH || CLANG_ARCH)
+#if (defined(MSVC_ARCH) || defined(GNU_ARCH) || defined(CLANG_ARCH))
 void retFunc()
 {
     return;
 }
 #else 
-#error This benchmark is designed for processor architectures supported by mainstream \ 
+#error This benchmark is designed for processor architectures supported by mainstream \
 compilers, including MSVC, GCC, and LLVM. To run this benchmark on other platforms, \
-users of ConFIRM can extend this source code as needed.\
+users of ConFIRM can extend this source code as needed.
 #endif

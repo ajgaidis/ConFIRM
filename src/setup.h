@@ -55,7 +55,9 @@
 #include <string.h>
 #include <stdarg.h>
 #define FALSE false
+#define TRUE true
 #define BYTE unsigned char
+#define DWORD unsigned int
 
 #else
 #endif
@@ -78,22 +80,6 @@
 #define SWTCTS 590     //switch
 #define VTABTS 460     //vtbl_call
 #define DLTS 500
-
-// Macros for different calling conventions in Windows and Linux
-#ifdef _WIN32
-#define CDECL __cdecl
-#define STDCALL __stdcall
-#define FASTCALL __fastcall
-#define THISCALL __thiscall
-
-#elif __linux__
-#define CDECL __attribute__((cdecl))
-#define STDCALL
-#define FASTCALL __attribute__((fastcall))
-#define THISCALL __attribute__((thiscall))
-
-#else
-#endif
 
 // A helper function that can be used to calculate elapsed time in nanosecond.
 #define NANOSECOND uint64_t
@@ -121,3 +107,28 @@ extern NANOSECOND get_wall_time();
 #if defined(__zarch__) || defined(__x86_64__) || defined(__ARM_ARCH) || defined(__arm__) || defined(__aarch64__)
 #define CLANG_ARCH
 #endif
+
+// Macros for different calling conventions in Windows and Linux
+#ifdef _WIN32
+#define CDECL __cdecl
+#define STDCALL __stdcall
+#define FASTCALL __fastcall
+#define THISCALL __thiscall
+
+#elif __linux__
+#ifdef AMD64
+#define CDECL
+#define STDCALL
+#define FASTCALL
+#define THISCALL
+#else /* 32-bit */
+#define CDECL __attribute__((cdecl))
+#define STDCALL
+#define FASTCALL __attribute__((fastcall))
+#define THISCALL __attribute__((thiscall))
+#endif
+
+#else
+#endif
+
+

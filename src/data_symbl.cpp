@@ -34,7 +34,7 @@
 int main()
 {
     int imp_null = -1;
-    DWORD p_exp_null = NULL;
+    DWORD *p_exp_null = NULL;
     
     
     imp_null = (int) exp_null;
@@ -47,7 +47,7 @@ int main()
     }    
     
     // Check whether an exported symbol can be read correctly via pointer.
-    p_exp_null = &exp_null;
+    p_exp_null = (DWORD *)&exp_null;
     if (*p_exp_null != 0)
     {
         printf("*p_exp_null should be NULL (current value: %d).\n", *p_exp_null);
